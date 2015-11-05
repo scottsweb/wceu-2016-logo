@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html>
+<!--
+
+Based on: https://github.com/agordon/d3export_demo
+Author: Scott Evans (@scottsweb)
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+-->
+<head>
+<title>WordCamp Europe Branding</title>
+
+<!-- Use CDN'd libraries: Jquery, d3js, BootStrap, google-code-prettify -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="http://d3js.org/d3.v3.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/prettify/188.0.0/prettify.js"></script>
+
+<!-- couldn't find a CDN'd version of vkBeautify, so include it locally -->
+<script src="vkbeautify.0.99.00.beta.js"></script>
+
+<!-- couldn't find a CDN'd version of Google-Code-Prettify's CSS file, so include it inline.
+     Original version is here: http://google-code-prettify.googlecode.com/svn/trunk/src/prettify.css -->
+<style>
+.pln{color:#000}@media screen{.str{color:#080}.kwd{color:#008}.com{color:#800}.typ{color:#606}.lit{color:#066}.pun,.opn,.clo{color:#660}.tag{color:#008}.atn{color:#606}.atv{color:#080}.dec,.var{color:#606}.fun{color:red}}@media print,projection{.str{color:#060}.kwd{color:#006;font-weight:bold}.com{color:#600;font-style:italic}.typ{color:#404;font-weight:bold}.lit{color:#044}.pun,.opn,.clo{color:#440}.tag{color:#006;font-weight:bold}.atn{color:#404}.atv{color:#060}}pre.prettyprint{padding:2px;border:1px solid #888}ol.linenums{margin-top:0;margin-bottom:0}li.L0,li.L1,li.L2,li.L3,li.L5,li.L6,li.L7,li.L8{list-style-type:none}li.L1,li.L3,li.L5,li.L7,li.L9{background:#eee}
+</style>
+
+
+<!-- Put a black border around the d3js drawing area -->
+<style>
+div.chart {
+	width: 100%;
+	height: 600px;
+	border: 1px solid #888;
+	border-radius: 4px;
+}
+
+.navbar-form {
+	margin-top: 15px;
+	margin-bottom: 15px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="row">
+	<div class="span12">
+		<div class="page-header">
+			<h1>WordCamp Europe Branding</h1>
+		</div>
+	</div>
+</div>
+
+
+<div class="row">
+
+	<nav class="navbar navbar-default">
+		<form class="navbar-form" role="search" action="">
+			<div class="input-group">
+				<span class="input-group-addon">Primary Colour</span>
+				<input type="text" class="form-control" name="primary" placeholder="Primary Colour" value="#ff0000">
+			</div>
+			<div class="input-group">
+				<span class="input-group-addon">Secondary Colour</span>
+				<input type="text" class="form-control" name="secondary" placeholder="Seconary Colour" value="#121212">
+			</div>
+			<br><br>
+			<div class="input-group">
+				<div class="checkbox">
+					<label>
+						<input type="checkbox" name="ring1" value="1" checked="checked"> Ring 1
+						<input type="checkbox" name="ring2" value="2" checked="checked"> Ring 2
+						<input type="checkbox" name="ring3" value="3" checked="checked"> Ring 3
+					</label>
+				</div>
+			</div>
+			<br><br>
+			<div class="input-group">
+				<span class="input-group-addon">Country</span>
+				<select id="countries" class="form-control">
+
+				</select>
+			</div>
+			<div class="input-group">
+				<span class="input-group-addon">Country Size</span>
+				<input type="text" class="form-control" name="country-size" placeholder="Country Size" value="10">
+			</div>
+			<div class="input-group">
+				<span class="input-group-addon">Border Size</span>
+				<input type="text" class="form-control" name="border-size" placeholder="Country Size" value="1">
+			</div>
+			<br><br>
+			<div class="input-group">
+				<div class="checkbox">
+					<label>
+						<input type="checkbox" name="borders" value="borders" checked="checked"> Borders
+					</label>
+				</div>
+			</div>
+			<br><br>
+			<button id="generate" class="btn btn-info">Generate</button>
+		</form>
+	</nav>
+
+	<div class="span12">
+		<div class='chart' id='logo'></div>
+	</div>
+</div>
+
+
+<!-- ########### The Export Section ####### -->
+<div class="row">
+	<div class="span12">
+		<h2>Export Drawing</h2>
+
+		<br/>
+		<button class="btn btn-success" id="generate_svg" value="">
+			Generate SVG</button>
+		<button class="btn btn-success" disabled="disabled" id="save_as_svg" value="">
+			Save as SVG</button>
+		<button class="btn btn-success" disabled="disabled" id="save_as_pdf" value="">
+			Save as PDF</button>
+		<button class="btn btn-success" disabled="disabled" id="save_as_png" value="">
+			Save as High-Res PNG</button>
+		<br>
+		<br>
+		SVG Code:<br>
+		<pre class="prettyprint lang-xml" id="svg_code"><br/> Use the generate button above&hellip;
+		</pre>
+	</div>
+</div>
+
+<!-- ########### The Details Section ####### -->
+<div class="row">
+	<div class="span12">
+		<h2>Documentation</h2>
+
+		<h4>About</h4>
+		<p>
+			This logo generator is designed to generate a unique WordCamp Europe logo each and every year. It is an evolution of the original logos by <a href="https://github.com/karmatosed/wceu">Tammie</a> and <a href="https://github.com/sonjaleix/wceu-2015">Sonja Leix</a>.
+			Each point represents a country in Europe and each line a border between them. The highlighted point is the WordCamp location for this year. Hack away - the code is open source and it would be great to keep iterating on this.
+		</p>
+
+		<h4>How To</h4>
+		<ul>
+			<li>To overcome your browser security settings you will probably need to run this from a local server. The easiest way is to type: <code>php -S localhost:8000</code> from the download directory in Terminal.</li>
+			<li>Set your settings at the top of the page and press the generate button.</li>
+			<li>Individual points can be moved to a location of your choice.</li>
+			<li>Double click a point to return it to a calculated/natural position.</li>
+			<li>There is an invisble point in the middle that has a certain amount of repulsion, this can be moved too but it is tricky to grab.</li>
+			<li>Hit the <code>Generate SVG</code> button when you are happy with the layout, this will outout the SVG code that can be imported into your favourite graphics editor.</li>
+			<li>You will need to add your own typography to complete the design.</li>
+			<li>The data is all stored in the <code>data.json</code> file. This contains a list of countries and the relationships between them.</li>
+		</ul>
+
+		<h4>Future improvements</h4>
+		<ul>
+			<li>Saving files does not currently work, perhaps use <a href="http://eligrey.com/demos/FileSaver.js/">FileSaver.js</a> and <a href="http://code.google.com/p/jspdf/">jsPDF</a>.</li>
+		</ul>
+
+		<h4>The following libraries were used</h4>
+		<ul>
+			<li><a href="http://d3js.org">d3js</a> - data-driven documents</li>
+			<li><a href="http://jquery.com/">jQuery</a> - The Write Less, Do More, JavaScript Library</li>
+			<li><a href="http://twitter.github.com/bootstrap/">Twitter's Bootstrap</a> - CSS framework</li>
+			<li><a href="https://code.google.com/p/google-code-prettify/">Google-Code-Prettify</a> - Javascipt code prettifier</li>
+			<li><a href="http://www.eslinstructor.net/vkbeautify/">vkBeautify</a> - Javascript code prettifier (XML indentation)</li>
+		</ul>
+
+		<h4>Source Code</h4>
+		<ul>
+			<li>The entire code is available on <a href="https://github.com/scottsweb/wceu-2016-logo">GitHub</a>, so fork me.</li>
+		</ul>
+
+	</div>
+</div>
+
+<!-- Hidden <FORM> to submit the SVG data to the server, which will convert it to SVG/PDF/PNG downloadable file.
+     The form is populated and submitted by the JavaScript below. -->
+<form id="svgform" method="post" action="download.pl">
+	<input type="hidden" id="output_format" name="output_format" value="">
+	<input type="hidden" id="data" name="data" value="">
+</form>
+
+</div> <!--container, end of Bootstrap-->
+
+<script type="text/javascript">
+
+/*
+   Utility function: populates the <FORM> with the SVG data
+   and the requested output format, and submits the form.
+*/
+function submit_download_form(output_format)
+{
+	// Get the d3js SVG element
+	var tmp = document.getElementById("logo");
+	var svg = tmp.getElementsByTagName("svg")[0];
+	// Extract the data as SVG text string
+	var svg_xml = (new XMLSerializer).serializeToString(svg);
+
+	// Submit the <FORM> to the server.
+	// The result will be an attachment file to download.
+	var form = document.getElementById("svgform");
+	form['output_format'].value = output_format;
+	form['data'].value = svg_xml ;
+	form.submit();
+}
+
+/*
+Draw the logo
+*/
+function create_d3js_drawing() {
+
+	// variables to be controlled via UI
+	var country = jQuery("#countries").val(),
+		long = 0.12312313, // unused
+		lat = 0123123123, // unused
+		primaryColour = jQuery("input[name='primary']").val(),
+		secondaryColour = jQuery("input[name='secondary']").val(),
+		countrySize = jQuery("input[name='country-size']").val(),
+		borderSize = jQuery("input[name='border-size']").val();
+
+	// set a default for first load
+	if ( ! country ) {
+		country = 'Austria';
+	}
+
+	// standard variables
+	var sketch = document.getElementById( 'logo' ),
+		w = sketch.offsetWidth,
+		h = sketch.offsetHeight,
+		x = d3.scale.ordinal().domain([57, 32, 112]).rangePoints([0, w], 1),
+		y = d3.scale.ordinal().domain(data).rangePoints([0, h], 2);
+
+	// reset sketch
+	d3.selectAll("svg > *").remove();
+	$('#logo').empty();
+
+	// setup force layout - to be modified further when data is loaded
+	var force = d3.layout.force()
+		.size([w, h])
+		.linkDistance(50)
+		.charge(-200);
+
+	// when dragging fix the position
+	function dblclick(d) {
+		d3.select(this).classed("fixed", d.fixed = false);
+	}
+
+	// double click a point to release it
+	function dragstart(d) {
+		d3.select(this).classed("fixed", d.fixed = true);
+	}
+
+	// allow dragging
+	var drag = force.drag()
+		.on("dragstart", dragstart);
+
+	// grab the data
+	d3.json("./data.json", function(error, data) {
+		if (error) throw error;
+
+		// put one node in the middle
+		data.nodes[28].fixed = true;
+		data.nodes[28].x = w/2;
+		data.nodes[28].y = h/2;
+
+		// pass data to force layout
+		force
+			.nodes(data.nodes)
+			.links(data.links)
+			.charge(function(d){
+				var charge = -100;
+				if (d.code === "CORE") {
+					charge = 20 * charge;
+				}
+				if (d.country === country ) {
+					charge = 7 * charge;
+				}
+				return charge;
+			})
+			.start();
+
+		// properties for the links
+		var link = svg.selectAll('.link')
+			.data( data.links )
+			.enter().append('line')
+			.attr('class', 'link')
+			.style('stroke', secondaryColour)
+			.style("stroke-width", function(d) { return Math.sqrt(d.value) * borderSize; });
+
+
+		if (! jQuery("input[name='borders']").is(':checked')) {
+			link.style('stroke', 'transparent');
+		}
+
+		// properties for the nodes
+		var node = svg.selectAll(".node")
+			.data(data.nodes)
+			.enter()
+			.append("circle")
+			.attr("class", function( item ) {
+				if ( item.country === country ) {
+					return 'country featured';
+				} else {
+					return 'country';
+				}
+			})
+			.attr("r", function ( item) {
+				// core is a special node that pushes the countries away from the (w)
+				if ( item.code === "CORE" ) {
+					return 70;
+				}  else {
+					return countrySize;
+				}
+			})
+			.attr("fill", function( item ) {
+				if ( item.country === country ) {
+					return primaryColour;
+				} else if ( item.code === "CORE" ) {
+					return 'transparent';
+				} else {
+					return secondaryColour;
+				}
+			})
+			.on("dblclick", dblclick)
+			.call(force.drag);
+
+			// position the countries
+			force.on("tick", function() {
+				link.attr("x1", function(d) { return d.source.x; })
+					.attr("y1", function(d) { return d.source.y; })
+					.attr("x2", function(d) { return d.target.x; })
+					.attr("y2", function(d) { return d.target.y; });
+
+				node.attr("cx", function(d) { return d.x; })
+					.attr("cy", function(d) { return d.y; });
+			});
+	});
+
+	// set the canvas
+	var svg = d3.select("#logo").append("svg")
+		.attr("width", w)
+		.attr("height", h);
+
+	// logo
+	var logoCircle = svg.append("circle").attr({
+		class: 'logo-centre',
+		cx: w/2,
+		cy: h/2,
+		r: 70,
+		fill: secondaryColour,
+	});
+
+	if ( jQuery("input[name='ring1']").is(':checked') ) {
+		var logoCircle1 = svg.append("circle").attr({
+			class: 'logo-ring-1',
+			cx: w/2,
+			cy: h/2,
+			r: 90,
+			fill: "transparent",
+			stroke: secondaryColour,
+			'stroke-width': '2px'
+		});
+	}
+
+	if ( jQuery("input[name='ring2']").is(':checked') ) {
+		var logoCircle2 = svg.append("circle").attr({
+			class: 'logo-ring-2',
+			cx: w/2,
+			cy: h/2,
+			r: 150,
+			fill: "transparent",
+			stroke: secondaryColour,
+			'stroke-width': '2px'
+		});
+	}
+
+	if ( jQuery("input[name='ring3']").is(':checked') ) {
+		var logoCircle3 = svg.append("circle").attr({
+			class: 'logo-ring-3',
+			cx: w/2,
+			cy: h/2,
+			r: 200,
+			fill: "transparent",
+			stroke: secondaryColour,
+			'stroke-width': '2px'
+		});
+	}
+
+	// add wordpress logo
+	d3.xml("wordpress.svg", "image/svg+xml", function(error, xml) {
+		if (error) { console.log(error); return; }
+		var tmp  = document.getElementById("logo");
+		var svg = tmp.getElementsByTagName("svg")[0];
+
+		// stops the logo being injected more than once
+		if ($('#wordpress').length) {
+			return;
+		}
+
+		svg.appendChild(xml.documentElement);
+
+		d3.select("#wordpress")
+		.attr({
+			x: w/2 - 65,
+			y: h/2 - 65,
+			width: '130px',
+			height: '130px',
+			fill: '#fff'
+		});
+	});
+
+	$("#generate").on("click", function(event) {
+		event.preventDefault();
+		create_d3js_drawing();
+		return false;
+	});
+}
+
+function show_svg_code()
+{
+	// Get the d3js SVG element
+	var tmp  = document.getElementById("logo");
+	var svg = tmp.getElementsByTagName("svg")[0];
+
+	// Extract the data as SVG text string
+	var svg_xml = (new XMLSerializer).serializeToString(svg);
+
+	//Optional: prettify the XML with proper indentations
+	svg_xml = vkbeautify.xml(svg_xml);
+
+	// Set the content of the <pre> element with the XML
+	$("#svg_code").text(svg_xml);
+
+	//Optional: Use Google-Code-Prettifier to add colors.
+	prettyPrint();
+}
+
+/*
+One-time initialization
+*/
+$(document).ready(function() {
+	create_d3js_drawing();
+
+	// Attached actions to the buttons
+	$("#generate_svg").click(function() { show_svg_code(); });
+
+	$("#save_as_svg").click(function() { submit_download_form("svg"); });
+
+	$("#save_as_pdf").click(function() { submit_download_form("pdf"); });
+
+	$("#save_as_png").click(function() { submit_download_form("png"); });
+
+	// populate drop down with JSON
+	$.ajax({
+		url:'/data.json',
+		type:'GET',
+		dataType: 'json',
+		success: function( json ) {
+			$.each(json.nodes, function(i, value) {
+				if (value.country === "Austria") {
+					$('#countries').append($('<option>').text(value.country).attr('value', value.country).attr('selected', 1));
+				} else {
+					$('#countries').append($('<option>').text(value.country).attr('value', value.country));
+				}
+			});
+		}
+	});
+});
+</script>
+
+</body>
+</html>
