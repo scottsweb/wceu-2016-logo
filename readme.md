@@ -1,6 +1,6 @@
 # WordCamp Europe Logo 2016
 
-* Status: ✔ Active
+* Status: Inctive
 * Contributors: [@scottsweb](http://twitter.com/scottsweb)
 * Description: Logo generator for WordCamp Europe 2016 and beyond.
 * Author: [Scott Evans](http://scott.ee)
